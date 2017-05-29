@@ -36,10 +36,6 @@ def main():
     with open('locs.json', 'r') as fp:
         scraped = json.load(fp)
 
-    for element in scraped:
-        element['tags']['amenity'] = 'bank'
-        element['tags']['atm'] = 'yes'
-
     checker = Checker(overpass_api, osm_api, load_banks(overpass_api), scraped)
     checker.run()
 

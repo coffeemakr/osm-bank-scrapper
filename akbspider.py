@@ -55,5 +55,7 @@ class AKBSpider(scrapy.Spider):
         item['tags']['name'] = "Aargauische Kantonalbank " + response.css('h1 ::text').extract_first()
         item['tags']['operator'] = "Aargauische Kantonalbank"
         item['tags']['phone'] = tel
-        item['tags']['opening_hours:url'] = response.url
+        item['tags'][fields.OPENING_HOURS_URL] = response.url
+        item['tags']['amenity'] = 'bank'
+
         yield item

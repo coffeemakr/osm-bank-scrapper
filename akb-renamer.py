@@ -31,6 +31,7 @@ def main():
         changer.update_object(obj)
     changer.commit()
 
+
 def get_wrong_nodes():
     overpass_api = overpass.API()
     query = '''

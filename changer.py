@@ -49,11 +49,23 @@ class Changer(object):
                     node['tag'][name] = value
             return node
 
-    def __init__(self, osm_api, source=None):
+    class SetAllowedTags(object):
+        def __init__(self, tags, allowed_tags):
+            self.tags = tags
+            self.allowed_tags = allowed_tags
+
+        def __call__(self, node):
+            for name, value in self.tags.items():
+                if name not in node['tag'] or name in self.allowed_tags:
+                    node['tag'][name] = value
+            return node
+
+    def __init__(self, osm_api, source=None, dry_run=False):
         self.osm_api = osm_api
         if source is not None:
             source = str(source)
         self.source = source
+        self.dry_run = dry_run
 
     def begin(self, comment):
         tags = {u"comment": comment}
@@ -64,7 +76,7 @@ class Changer(object):
     def commit(self):
         self.osm_api.ChangesetClose()
 
-    def _modify_node(self, existing_object, modifier_fnc):
+    def modify_node(self, existing_object, modifier_fnc):
         obj_type = existing_object['type']
         identifier = existing_object['id']
         if obj_type == 'node':
@@ -77,13 +89,16 @@ class Changer(object):
         obj = modifier_fnc(obj)
         print_different_tags(tags_before, obj['tag'])
         input("Cancel if not ok")
-        update_fnc(obj)
+        if not self.dry_run:
+            update_fnc(obj)
+        else:
+            print("Skipped because of dry run")
 
     def set_tags(self, existing_object, tags):
-        self._modify_node(existing_object, Changer.SetTags(tags))
+        self.modify_node(existing_object, Changer.SetTags(tags))
 
     def add_tags(self, existing_object, tags):
-        self._modify_node(existing_object, Changer.AddTags(tags))
+        self.modify_node(existing_object, Changer.AddTags(tags))
 
     def create_node(self, wanted):
         raise NotImplementedError()
@@ -112,3 +127,6 @@ class Changer(object):
             return self.osm_api.WayUpdate(obj.to_osmapi())
         else:
             raise ValueError("Invalid type: " + obj.type)
+
+    def set_some_tags(self, existing_object, tags, allowed_tags):
+        self.modify_node(existing_object, Changer.SetAllowedTags(tags, allowed_tags))
