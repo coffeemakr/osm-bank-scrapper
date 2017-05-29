@@ -37,7 +37,6 @@ def open_browser(lat, lon):
                                                                                                         lon=lon))
 
 
-
 def distance(origin, destination):
     lat1, lon1 = origin
     lat2, lon2 = destination

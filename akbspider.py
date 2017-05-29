@@ -1,10 +1,8 @@
-
 import scrapy
 import fields
 
 
 class AKBSpider(scrapy.Spider):
-
     name = 'AKB Spider'
     start_urls = ['https://www.akb.ch/die-akb/kontakt/geschaeftsstellen.aspx']
 
@@ -21,8 +19,8 @@ class AKBSpider(scrapy.Spider):
 
     def parse(self, response):
         links = response.css('.countrymap')[0].css('a.poi')
-        finance_infos = response\
-            .css('.modFooter .info p:first-child')\
+        finance_infos = response \
+            .css('.modFooter .info p:first-child') \
             .xpath('//text()[preceding-sibling::br][contains(., "BIC")]').extract_first()
         finance_tags = {}
         for finance_info in finance_infos.split(','):

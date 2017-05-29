@@ -8,11 +8,13 @@ NEUE_AARGAUER_BANK = 'Neue Aargauer Bank'
 NEUE_AARGAUER_BANK_AG = NEUE_AARGAUER_BANK + " AG"
 HOUSE_NUMBER_REGEX = re.compile(r'\s+(\d+)$')
 
+
 def yes_or_no(value):
     if value:
         return 'yes'
     else:
         return 'no'
+
 
 def get_coordinates_from_location(location):
     return {'lat': location['latitude'], 'lon': location['longitude']}
@@ -62,6 +64,7 @@ def parse_atm(response, location):
 
     return request
 
+
 def parse_atm_page(response):
     tags = response.meta['tags']
 
@@ -74,18 +77,18 @@ def parse_atm_page(response):
     tags["currency:EUR"] = yes_or_no("EUR" in currencies)
     tags["currency:CHF"] = yes_or_no("CHF" in currencies)
 
-    yield {'tags': tags, 'coordinates': response.meta['coordinates'], 'title': response.css('h1.csc-firstHeader::text').extract_first()}
+    yield {'tags': tags, 'coordinates': response.meta['coordinates'],
+           'title': response.css('h1.csc-firstHeader::text').extract_first()}
 
 
 class NabSpider(scrapy.Spider):
-
     name = NEUE_AARGAUER_BANK + ' Spider'
 
     start_urls = ['https://www.nab.ch/kontakt-services/kontakt-standorte.html']
 
     def parse(self, response):
-        locationArray = response\
-            .xpath('//script[contains(text(),"locationArray")]/text()')\
+        locationArray = response \
+            .xpath('//script[contains(text(),"locationArray")]/text()') \
             .re(r'locationArray\s*=\s*(.+);\s*$')[0]
         locations = json.loads(locationArray)
         for location in locations:

@@ -1,8 +1,8 @@
-'''
+"""
 Search for 'Aargauer Kantonalbank' and replace it with 'Aargauische Kantonalbank' which is the correct name.
 
 It is important to notice that there is also a 'Neue Aargauer Bank'.
-'''
+"""
 
 import overpass
 import osmapi
@@ -12,6 +12,7 @@ from changer import Changer
 
 NAME = "akb-renamer"
 VERSION = "1.0"
+
 
 def main():
     username = input("Username: ")
@@ -50,6 +51,7 @@ def get_wrong_nodes():
     out ids;
     '''
     return overpass_api.Get(query, responseformat='json', build=False)['elements']
+
 
 if __name__ == '__main__':
     main()

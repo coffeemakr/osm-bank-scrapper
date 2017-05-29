@@ -1,7 +1,7 @@
 import sys
 
-class Checker(object):
 
+class Checker(object):
     def __init__(self, objects, overpass_api):
         self.objects = objects
         self.overpass_api = overpass_api

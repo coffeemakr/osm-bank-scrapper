@@ -1,0 +1,11 @@
+[out:json][timeout:25];
+
+( area[name="Aargau"]; )->.ch;
+
+(
+  node["amenity"="bank"](area.ch);
+  rel["amenity"="bank"](area.ch);
+);
+out body;
+>;
+out body center qt;

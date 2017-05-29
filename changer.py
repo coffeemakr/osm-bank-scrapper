@@ -29,7 +29,6 @@ class OSMNode(OSMObject):
 
 
 class Changer(object):
-
     class SetTags(object):
         def __init__(self, tags):
             self.tags = tags

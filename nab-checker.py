@@ -6,11 +6,13 @@ from changer import Changer
 from check3 import Checker
 import json
 import overpass
-import helper
 from helper import open_browser
+
 
 NAME = 'osm-bank-scraper'
 VERSION = '0.3.0'
+NAB_ATM_SOURCE=("https://www.nab.ch/fileadmin/user_upload/Public/Inhalte/"
+                "Kontakt-Services/Standorte/740700_Geldausgabeautomaten_der_NAB.pdf")
 
 def is_same_ignore_case(first, second):
     return first.strip().lower() == second.strip().lower()
@@ -58,16 +60,16 @@ def main():
 
     allowed_names = ['Neue Aargauer Bank', 'Neue Aargauer Bank AG', 'NAB']
 
-    atmChecker = ATMChecker(atms, allowed_names=allowed_names, overpass_api=overpass.API())
+    atm_checker = ATMChecker(atms, allowed_names=allowed_names, overpass_api=overpass.API())
 
     username = input("username: ")
     password = getpass.getpass("password: ")
     osm_api = osmapi.OsmApi(username=username, password=password, appid=NAME + " " + VERSION)
 
-    changer = Changer(osm_api, dry_run=True, source="https://www.nab.ch/fileadmin/user_upload/Public/Inhalte/Kontakt-Services/Standorte/740700_Geldausgabeautomaten_der_NAB.pdf")
+    changer = Changer(osm_api, dry_run=True, source=NAB_ATM_SOURCE)
     changer.begin("Add information to the ATM of Neue Aargauer Bank")
 
-    for obj, match in atmChecker.find_all_objects():
+    for obj, match in atm_checker.find_all_objects():
         if match:
             changer.set_some_tags(match, obj['tags'], allowed_tags=['operator'])
             print("=" * 80)

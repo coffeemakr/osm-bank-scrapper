@@ -150,5 +150,6 @@ class Checker(object):
         '''.format(selector=selector, location=location)
         return self.overpass_api.Get(query, responseformat='json', build=False)
 
+
 if __name__ == '__main__':
     main()
