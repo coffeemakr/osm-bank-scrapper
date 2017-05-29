@@ -59,7 +59,7 @@ class Changer(object):
         tags = {u"comment": comment}
         if self.source is not None:
             tags['source'] = self.source
-        self.osm_api.ChangesetCreate()
+        self.osm_api.ChangesetCreate(tags)
 
     def commit(self):
         self.osm_api.ChangesetClose()
