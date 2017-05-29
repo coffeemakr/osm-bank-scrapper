@@ -7,6 +7,7 @@ from check3 import Checker
 import json
 import overpass
 from helper import open_browser
+import helper
 
 
 NAME = 'osm-bank-scraper'
@@ -79,6 +80,11 @@ def main():
             print("=" * 80)
         else:
             open_browser(**obj['coordinates'])
+    for action in changer.get_planned_actions():
+        tags = action.previous_tags
+        next_tags = action.obj['tag']
+        helper.print_different_tags(tags, next_tags)
+        input("Enter... :)")
     changer.commit()
 
 if __name__ == '__main__':

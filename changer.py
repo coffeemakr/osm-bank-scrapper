@@ -1,4 +1,4 @@
-from helper import print_different_tags
+from collections import namedtuple
 
 
 class OSMObject(object):
@@ -28,52 +28,69 @@ class OSMNode(OSMObject):
         super(OSMNode, self).__init__(id_, 'node', osmapi_result)
 
 
-class Changer(object):
-    class SetTags(object):
-        def __init__(self, tags):
-            self.tags = tags
+class SetTags(object):
+    def __init__(self, tags):
+        self.tags = tags
 
-        def __call__(self, node):
-            for name, value in self.tags.items():
+    def __call__(self, node):
+        for name, value in self.tags.items():
+            node['tag'][name] = value
+        return node
+
+
+class AddTags(object):
+    def __init__(self, tags):
+        self.tags = tags
+
+    def __call__(self, node):
+        for name, value in self.tags.items():
+            if name not in node['tag']:
                 node['tag'][name] = value
-            return node
+        return node
 
-    class AddTags(object):
-        def __init__(self, tags):
-            self.tags = tags
 
-        def __call__(self, node):
-            for name, value in self.tags.items():
-                if name not in node['tag']:
-                    node['tag'][name] = value
-            return node
+class SetAllowedTags(object):
+    def __init__(self, tags, allowed_tags):
+        self.tags = tags
+        self.allowed_tags = allowed_tags
 
-    class SetAllowedTags(object):
-        def __init__(self, tags, allowed_tags):
-            self.tags = tags
-            self.allowed_tags = allowed_tags
+    def __call__(self, node):
+        for name, value in self.tags.items():
+            if name not in node['tag'] or name in self.allowed_tags:
+                node['tag'][name] = value
+        return node
 
-        def __call__(self, node):
-            for name, value in self.tags.items():
-                if name not in node['tag'] or name in self.allowed_tags:
-                    node['tag'][name] = value
-            return node
+ChangerAction = namedtuple("ChangerAction", ["previous_tags", "obj", "update_function"])
 
+
+class Changer(object):
     def __init__(self, osm_api, source=None, dry_run=False):
         self.osm_api = osm_api
         if source is not None:
             source = str(source)
         self.source = source
         self.dry_run = dry_run
+        self.tasks = []
 
     def begin(self, comment):
         tags = {u"comment": comment}
         if self.source is not None:
             tags['source'] = self.source
-        self.osm_api.ChangesetCreate(tags)
+        if not self.dry_run:
+            self.osm_api.ChangesetCreate(tags)
+
+    def _commit_action(self, action):
+        if not self.dry_run:
+            action.update_function(action.obj)
+        else:
+            print("Dry running %s " % str(action))
 
     def commit(self):
-        self.osm_api.ChangesetClose()
+        while self.tasks:
+            action = self.tasks.pop(0)
+            self._commit_action(action)
+        if not self.dry_run:
+            self.osm_api.ChangesetClose()
 
     def modify_node(self, existing_object, modifier_fnc):
         obj_type = existing_object['type']
@@ -86,18 +103,16 @@ class Changer(object):
         print("NodeData", obj)
         tags_before = dict(obj['tag'])
         obj = modifier_fnc(obj)
-        print_different_tags(tags_before, obj['tag'])
-        input("Cancel if not ok")
-        if not self.dry_run:
-            update_fnc(obj)
-        else:
-            print("Skipped because of dry run")
+        self.tasks.append(ChangerAction(tags_before, obj, update_fnc))
+
+    def get_planned_actions(self):
+        return list(self.tasks)
 
     def set_tags(self, existing_object, tags):
-        self.modify_node(existing_object, Changer.SetTags(tags))
+        self.modify_node(existing_object, SetTags(tags))
 
     def add_tags(self, existing_object, tags):
-        self.modify_node(existing_object, Changer.AddTags(tags))
+        self.modify_node(existing_object, AddTags(tags))
 
     def create_node(self, wanted):
         raise NotImplementedError()
@@ -128,4 +143,4 @@ class Changer(object):
             raise ValueError("Invalid type: " + obj.type)
 
     def set_some_tags(self, existing_object, tags, allowed_tags):
-        self.modify_node(existing_object, Changer.SetAllowedTags(tags, allowed_tags))
+        self.modify_node(existing_object, SetAllowedTags(tags, allowed_tags))
